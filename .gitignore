@@ -1,0 +1,12 @@
+# Build artefacts
+/dist/
+
+# IDEs
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# Collected by the release from the modules cjx links
+/third_party_licenses/

@@ -1,0 +1,20 @@
+FROM debian:trixie-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends squid \
+    && rm -rf /var/lib/apt/lists/* /etc/squid/squid.conf
+
+COPY squid.conf /etc/squid/squid.conf
+COPY entrypoint.sh /usr/local/bin/cjx-firewall-entrypoint
+RUN chmod 0755 /usr/local/bin/cjx-firewall-entrypoint
+
+# Squid drops to user "proxy" (uid 13 in debian). The cache dir must be writable
+# even though we disable caching, because squid touches it on startup.
+RUN mkdir -p /var/spool/squid /var/log/squid \
+    && chown -R proxy:proxy /var/spool/squid /var/log/squid
+
+EXPOSE 8080
+USER proxy
+ENTRYPOINT ["/usr/local/bin/cjx-firewall-entrypoint"]

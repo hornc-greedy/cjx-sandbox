@@ -1,0 +1,30 @@
+repos:
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v2.13.1
+    hooks:
+      - id: golangci-lint
+        language_version: "1.27.0"
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-yaml
+      # managed-settings.json is baked into the image, the example mcp.json is
+      # copied by hand. Go parses neither before a run, so a syntax error
+      # would only surface inside a running container.
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+  # shellcheck-py ships the binary as a wheel, so the hook needs no Docker.
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1-1
+    hooks:
+      - id: shellcheck
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.0
+    hooks:
+      - id: gitleaks

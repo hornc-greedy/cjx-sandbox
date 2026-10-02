@@ -1,0 +1,53 @@
+version: 2
+
+project_name: cjx
+
+before:
+  hooks:
+    # Every module linked into cjx asks for its license to travel with the binary.
+    - go run github.com/google/go-licenses/v2@v2.0.1 save ./cmd/cjx --save_path=third_party_licenses --force --ignore github.com/hornc-greedy/cjx-sandbox
+    # go-licenses leaves out the standard library, which is linked in as well.
+    - sh -c 'mkdir -p third_party_licenses/go && cp "$(go env GOROOT)/LICENSE" third_party_licenses/go/'
+
+builds:
+  - main: ./cmd/cjx
+    binary: cjx
+    env:
+      - CGO_ENABLED=0
+    targets:
+      - linux_amd64_v1
+      - darwin_arm64
+    ldflags:
+      - -s -w
+      - -X main.Version={{.Version}}
+
+archives:
+  - formats:
+      - tar.gz
+    name_template: "cjx-installer-{{ .Os }}-{{ .Arch }}"
+    files:
+      - README.md
+      - CONTRIBUTING.md
+      - LICENSE
+      - NOTICE
+      - examples/**/*
+      - third_party_licenses/**/*
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^Merge "
+      - '^(docs|test|chore|ci)(\(.+\))?:'
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
+      order: 0
+    - title: Bug fixes
+      regexp: '^.*?fix(\(.+\))??!?:.+$'
+      order: 1
+    - title: Others
+      order: 999
+
+checksum:
+  name_template: "checksums.txt"

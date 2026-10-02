@@ -1,0 +1,63 @@
+# cjx built-in agents
+#
+# cjx reads this file from its binary, so every release brings its agents along.
+# Agents of your own, or more modes for one below, go into
+# ~/.config/cjx/agents.local.toml.
+
+[[agent]]
+name = "claude"
+display = "Claude Code"
+binary = "claude"
+install = "curl -fsSL https://claude.ai/install.sh | bash"
+# mcp = true stacks ~/.config/cjx/mcp-server/ (Containerfile + mcp.json) onto this agent.
+mcp = true
+allow_hosts = [
+  "*.anthropic.com",
+  "*.claude.ai",
+  "*.claude.com",
+  "statsig.com",
+]
+
+  [[agent.mode]]
+  name = "Subscription"
+  display = "Anthropic Subscription"
+  volume = "claude-subscription"
+
+[[agent]]
+name = "pi.dev"
+display = "pi.dev"
+binary = "pi"
+install = "curl -fsSL https://pi.dev/install.sh | sh"
+# pi.dev itself, then the subscriptions /login offers from OpenAI, Anthropic and GitHub Copilot.
+allow_hosts = [
+  "pi.dev",
+  "auth.openai.com", "chatgpt.com", "api.openai.com",
+  "*.anthropic.com", "*.claude.ai", "*.claude.com",
+  "github.com", "api.github.com", "*.githubcopilot.com",
+]
+
+  [[agent.mode]]
+  name = "Subscription"
+  display = "Subscription (pi /login)"
+  volume = "pi-subscription"
+
+[[agent]]
+name = "codex"
+display = "OpenAI Codex"
+binary = "codex"
+install = "curl -fsSL https://chatgpt.com/codex/install.sh | sh"
+# codex records its background app-server by calling ps, which the slim base image lacks.
+packages = ["procps"]
+# codex wraps every command it runs in a bubblewrap sandbox, and Docker denies
+# the user namespace that needs until the seccomp filter comes off.
+needs_userns = true
+allow_hosts = [
+  "*.openai.com",
+  "chatgpt.com",
+]
+
+  # The browser callback cannot reach into the sandbox, so sign in with a device code.
+  [[agent.mode]]
+  name = "Subscription"
+  display = "ChatGPT Subscription"
+  volume = "codex-subscription"

@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp",
+        "--headless", "--no-sandbox", "--isolated",
+        "--block-service-workers",
+        "--image-responses", "omit",
+        "--executable-path", "/opt/google/chrome/chrome",
+        "--output-dir", "/home/agent/.cache/playwright-output"
+      ]
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "chrome-devtools-mcp",
+        "--headless", "--isolated",
+        "--executablePath", "/usr/bin/chromium",
+        "--chromeArg=--no-sandbox",
+        "--chromeArg=--disable-setuid-sandbox",
+        "--chromeArg=--disable-dev-shm-usage",
+        "--chromeArg=--disable-gpu"
+      ]
+    }
+  }
+}

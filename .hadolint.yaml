@@ -1,0 +1,5 @@
+# DL3008: these images are built to drift - the drift hash identifies them, apt does not.
+# DL3066: numeric uids are for a kubelet, and cjx never meets one.
+ignored:
+  - DL3008
+  - DL3066

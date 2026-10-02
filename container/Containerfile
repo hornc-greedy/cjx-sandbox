@@ -1,0 +1,38 @@
+FROM debian:trixie-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# pipefail so the NodeSource curl | bash pipe fails on a broken download
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# bubblewrap: codex sandboxes the commands it runs with it and warns without it.
+RUN apt-get update && apt-get install -y --no-install-recommends bubblewrap ca-certificates curl fd-find git jq less ripgrep \
+    && ln -s "$(command -v fdfind)" /usr/local/bin/fd \
+    && rm -rf /var/lib/apt/lists/*
+
+# Node.js 26 from NodeSource. Debian trixie only ships Node 20; the NodeSource
+# 'nodejs' package bundles npm and is apt-pinned (priority 600) so it can't be
+# downgraded to Debian's. Image builds run on the host network.
+RUN curl -fsSL https://deb.nodesource.com/setup_26.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd -g 1000 agent \
+    && useradd -m -u 1000 -g 1000 -s /bin/bash agent \
+    && mkdir -p /opt/cjx/stash /etc/claude-code \
+    && chown -R agent:agent /opt/cjx/stash
+
+COPY --chmod=755 entrypoint.sh /usr/local/bin/entrypoint.sh
+# The directory the next file lands in is made above: BuildKit gives a
+# directory it creates for a COPY the file's --chmod, and 644 shuts everyone out.
+COPY --chmod=644 managed-settings.json /etc/claude-code/managed-settings.json
+
+USER agent
+
+ENV HOME=/home/agent
+ENV NPM_CONFIG_PREFIX="/home/agent/.local"
+ENV PATH="/home/agent/.local/bin:/usr/local/bin:/usr/bin:/bin"
+
+WORKDIR /workspace
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["/bin/bash"]

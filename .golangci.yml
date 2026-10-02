@@ -1,0 +1,93 @@
+version: "2"
+
+run:
+  timeout: 5m
+  build-tags:
+    - integration
+
+linters:
+  default: none
+  enable:
+    # Correctness
+    - errcheck
+    - govet
+    - staticcheck
+    - ineffassign
+    - copyloopvar
+    - nilerr
+    - makezero
+    - asasalint
+    - errorlint
+    - exhaustive
+    - bodyclose
+    - contextcheck
+    - fatcontext
+    - predeclared
+    - reassign
+    - sloglint
+
+    # Security
+    - gosec
+
+    # Code Quality
+    - revive
+    - gocyclo
+    - gocritic
+    - unparam
+    - unconvert
+    - prealloc
+    - dupl
+    - goconst
+    - misspell
+    - usestdlibvars
+
+    # CLI-tool specific
+    - gochecknoinits
+    - gochecknoglobals
+    - nolintlint
+
+  settings:
+    gosec:
+      excludes:
+        - G204 # internal/engine is a thin wrapper around the podman/docker CLI by design
+        - G304 # paths come from the command line, the running binary, ~/.config/cjx and ~/.cache/cjx
+        - G704 # DetectUpstreamProxy probes the host proxy named in http(s)_proxy
+    goconst:
+      # Engine CLI flags/verbs, Go-template format strings and the names of the
+      # two engines are inherent CLI vocabulary, not constants worth naming.
+      # Domain values get real consts.
+      ignore-string-values:
+        - '^(--format|--network|--tmpfs|docker|image|podman|\{\{\.Name\}\})$'
+    revive:
+      enable-default-rules: true
+      rules:
+        - name: line-length-limit
+          arguments: [100]
+
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - gosec
+          - gocyclo
+          - dupl
+          - gochecknoglobals
+          - errcheck
+          - unparam
+          - goconst
+
+formatters:
+  enable:
+    - goimports
+    - gofumpt
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/hornc-greedy/cjx-sandbox
+    gofumpt:
+      module-path: github.com/hornc-greedy/cjx-sandbox
+      extra-rules: false
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

@@ -1,0 +1,57 @@
+# cjx wraps this Containerfile and replaces the FROM line with
+# FROM localhost/cjx-agent-<agent>:latest at build time. The line below
+# is kept only so this file is valid Dockerfile syntax for editor tooling.
+# hadolint ignore=DL3007
+FROM localhost/cjx-base:latest
+
+USER root
+
+# pipefail so the find | head pipe below fails instead of masking errors
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# --- Common runtime: system libs for any browser-based MCP ---
+# node + npm come from cjx-base (NodeSource Node 26); only the browser/system
+# libraries are added here.
+RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      ca-certificates \
+      fonts-liberation fonts-noto-color-emoji fonts-unifont \
+      libasound2t64 libatk-bridge2.0-0t64 libatk1.0-0t64 libatspi2.0-0t64 \
+      libcairo2 libcups2t64 libdbus-1-3 libdrm2 libgbm1 libglib2.0-0t64 \
+      libnspr4 libnss3 libpango-1.0-0 \
+      libx11-6 libxcb1 libxcomposite1 libxdamage1 libxext6 libxfixes3 \
+      libxkbcommon0 libxrandr2 libfontconfig1 libfreetype6 chromium \
+  && rm -rf /var/lib/apt/lists/*
+
+# Stage everything the agent needs into /opt/cjx/stash. cjx's runtime
+# entrypoint copies that stash into the volume-mounted ~/.local on every
+# launch (newer files only), so the install survives the volume overlay
+# that hides any image content under /home/agent at run time.
+RUN install -d -o agent -g agent /opt/cjx/stash /opt/cjx/stash/.local /ms-playwright
+
+# --- Browsers: each MCP gets its own bundled browser ---
+#   - @playwright/mcp     -> Playwright-bundled Chromium (linux/arm64 supported)
+#   - chrome-devtools-mcp -> Debian system chromium (/usr/bin/chromium)
+#
+# cjx update rebuilds the user image with --no-cache, so this
+# layer always re-runs and pulls the latest npm + browser bits.
+USER agent
+ENV HOME=/opt/cjx/stash
+ENV NPM_CONFIG_PREFIX=/opt/cjx/stash/.local
+ENV PATH=/opt/cjx/stash/.local/bin:/usr/local/bin:/usr/bin:/bin
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN npm install -g @playwright/mcp@latest chrome-devtools-mcp@latest \
+  && npx -y playwright@latest install chromium
+
+# Symlink the Playwright-bundled Chromium where mcp.json's --executable-path expects it.
+USER root
+RUN mkdir -p /opt/google/chrome \
+  && ln -sf "$(find /ms-playwright -type f -executable \( -name chrome -o -name headless_shell \) | head -1)" /opt/google/chrome/chrome
+
+# Reset env back to runtime defaults. cjx-base sets the same values, but
+# the npm-install block above overrode them, so restore them here so any
+# downstream layer or runtime sees the agent's real $HOME and prefix.
+USER agent
+ENV HOME=/home/agent
+ENV NPM_CONFIG_PREFIX=/home/agent/.local
+ENV PATH=/home/agent/.local/bin:/usr/local/bin:/usr/bin:/bin
