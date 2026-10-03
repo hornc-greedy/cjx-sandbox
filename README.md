@@ -121,7 +121,10 @@ it. `/login` inside Claude repeats it whenever you want.
 
 **pi.dev** signs in with `/login`, which is also where you pick the provider. Its
 browser callback cannot reach into the sandbox, so pi asks you to paste the final
-redirect URL or the authorization code back into it. The firewall lets the
+redirect URL or the authorization code back into it. The sign-in link is long and
+wraps over several lines. Ctrl+X copies it through your terminal's clipboard where
+the terminal supports OSC 52. Otherwise copy it by hand and take out the spaces the
+line breaks leave behind. The firewall lets the
 subscriptions from OpenAI (ChatGPT), Anthropic (Claude) and GitHub Copilot
 through. Another provider needs its hosts in the
 [allowlist](#extend-the-allowlist).
