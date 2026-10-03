@@ -37,6 +37,24 @@ func TestHostEnv(t *testing.T) {
 	}
 }
 
+// The terminal's own variables reach every agent, the rest of the shell does not.
+func TestBuildRunArgsPassesTheTerminal(t *testing.T) {
+	t.Setenv("TERM_PROGRAM", "ghostty")
+	t.Setenv("COLORTERM", "truecolor")
+	t.Setenv("ANTHROPIC_API_KEY", "secret")
+	args := strings.Join(buildRunArgs(mustEngine(t), sandboxRun{
+		Agent: config.Agent{Name: "test", Binary: "/bin/test"}, Workdir: "/tmp/cwd",
+	}), " ")
+	for _, want := range []string{"-e TERM_PROGRAM=ghostty", "-e COLORTERM=truecolor"} {
+		if !strings.Contains(args, want) {
+			t.Errorf("missing %q in %s", want, args)
+		}
+	}
+	if strings.Contains(args, "ANTHROPIC_API_KEY") {
+		t.Errorf("a shell variable outside the terminal reached the sandbox: %s", args)
+	}
+}
+
 func TestBuildRunArgs(t *testing.T) {
 	eng := mustEngine(t)
 	a := config.Agent{Name: "test", Binary: "/bin/test", EnvPrefixes: []string{"CJXTEST_FOO_"}}

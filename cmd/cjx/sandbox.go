@@ -91,6 +91,22 @@ func hostEnv(a config.Agent) []string {
 	return out
 }
 
+// terminalEnv names the host terminal, so an agent picks colors and clickable
+// links as it would outside the sandbox.
+func terminalEnv() []string {
+	var out []string
+	for _, name := range []string{
+		"TERM_PROGRAM", "TERM_PROGRAM_VERSION", "TERMINAL_EMULATOR", "COLORTERM",
+		"KITTY_WINDOW_ID", "GHOSTTY_RESOURCES_DIR", "WEZTERM_PANE", "ITERM_SESSION_ID",
+		"WT_SESSION", "WARP_SESSION_ID", "WARP_TERMINAL_SESSION_UUID",
+	} {
+		if v, ok := os.LookupEnv(name); ok {
+			out = append(out, name+"="+v)
+		}
+	}
+	return out
+}
+
 // A sandboxRun is one agent invocation. The paths and names are all strings, so
 // a struct literal is what keeps them from being swapped at the call site.
 type sandboxRun struct {
@@ -143,7 +159,7 @@ func buildRunArgs(e *engine.Engine, r sandboxRun) []string {
 		args = append(args, "--network", r.Network)
 	}
 	args = append(args, e.ProxyArgs(r.ProxyURL)...)
-	for _, kv := range hostEnv(a) {
+	for _, kv := range append(terminalEnv(), hostEnv(a)...) {
 		args = append(args, "-e", kv)
 	}
 	args = append(args, image.UserTag(a))

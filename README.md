@@ -107,6 +107,10 @@ the next `cjx run` goes straight in, and `--select` brings the question back whe
 you want to switch. Running `cjx` with no arguments opens a menu that does the
 same thing - see [Commands at a glance](#commands-at-a-glance).
 
+The variables that name your terminal, such as `TERM_PROGRAM` and `COLORTERM`,
+reach the sandbox, so an agent uses its colors and clickable links as it would
+outside. Nothing else from your shell reaches a built-in agent.
+
 ### 4. Sign the agent in, once
 
 Each agent signs in on its own first start, and the login lands in that mode's
