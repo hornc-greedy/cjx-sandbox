@@ -8,6 +8,8 @@ Lint and file hygiene run as [pre-commit](https://pre-commit.com) hooks: `golang
 
 A release starts from the Release workflow in the Actions tab. After the CI passes, [svu](https://github.com/caarlos0/svu) takes the next version from the commits since the last tag (`fix` raises the patch, `feat` the minor, `!` the major version), tags `main` with it, and GoReleaser publishes the archives on the GitHub releases page. A tag `v*` pushed by hand releases that version instead.
 
+Dependabot proposes updates to the Go modules, the GitHub Actions and the pre-commit hooks every weekday.
+
 ## Source layout
 
 ```
