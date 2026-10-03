@@ -6,7 +6,7 @@ How cjx is put together and how to work on it. Using cjx is covered in the [READ
 
 Lint and file hygiene run as [pre-commit](https://pre-commit.com) hooks: `golangci-lint` (it reads `.golangci.yml`), shellcheck on the container scripts, gitleaks, and the YAML/JSON/TOML and whitespace checks. CI runs the same set as its own `pre-commit` job; run `pre-commit install` once after cloning to get them on each commit instead of in CI.
 
-Pushing a tag `v*` runs the Release workflow, which builds the archives with GoReleaser and publishes them on the GitHub releases page.
+A release starts from the Release workflow in the Actions tab. After the CI passes, [svu](https://github.com/caarlos0/svu) takes the next version from the commits since the last tag (`fix` raises the patch, `feat` the minor, `!` the major version), tags `main` with it, and GoReleaser publishes the archives on the GitHub releases page. A tag `v*` pushed by hand releases that version instead.
 
 ## Source layout
 
